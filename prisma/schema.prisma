@@ -1,14 +1,119 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Defines the database structure for subscription billing management
 
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../app/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ============================================
+// MODELS (Database Tables)
+// ============================================
+
+// Customer - The end user subscribing to plans
+model Customer {
+  id        Int            @id @default(autoincrement())
+  name      String
+  email     String         @unique
+  status    CustomerStatus @default(ACTIVE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  // Relations - A customer can have multiple subscriptions and invoices
+  subscriptions Subscription[]
+  invoices      Invoice[]
+
+  @@map("customers") // Table name in the actual database
+}
+
+// Plan - Subscription tiers (Starter, Pro, Enterprise)
+model Plan {
+  id              Int             @id @default(autoincrement())
+  name            String          @unique
+  description     String?
+  price           Int             // Price in cents (e.g., 999 = $9.99, 2999 = $29.99)
+  billingInterval BillingInterval
+  trialPeriodDays Int?            // Optional trial period (e.g., 14, 30)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations - A plan can be used by many subscriptions
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+// Subscription - Links a Customer to a Plan with billing cycle tracking
+model Subscription {
+  id                 Int                @id @default(autoincrement())
+  customerId         Int
+  planId             Int
+  status             SubscriptionStatus @default(TRIALING)
+  startDate          DateTime           @default(now())
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  canceledAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  // Relations
+  customer Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [planId], references: [id])
+  invoices Invoice[]
+
+  @@map("subscriptions")
+}
+
+// Invoice - Bills generated for subscription periods
+model Invoice {
+  id             Int           @id @default(autoincrement())
+  subscriptionId Int
+  customerId     Int
+  amount         Int           // Amount in cents
+  dueDate        DateTime
+  paidAt         DateTime?
+  status         InvoiceStatus @default(DRAFT)
+  lineItems      Json          // Flexible structure for invoice line items (JSON format)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relations
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  customer     Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("invoices")
+}
+
+// ============================================
+// ENUMS (Predefined Values)
+// ============================================
+
+enum CustomerStatus {
+  ACTIVE
+  TRIALING
+  CANCELLED
+}
+
+enum BillingInterval {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  FAILED
 }
