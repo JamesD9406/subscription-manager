@@ -6,10 +6,10 @@ import { PrismaError, isPrismaError } from '@/lib/prisma-errors';
 // POST /api/invoices/[id]/pay - mark invoice as paid (simulate payment)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const invoiceId = parseInt(params.id);
+    const invoiceId = parseInt((await params).id);
 
     if (isNaN(invoiceId)) {
       return NextResponse.json(

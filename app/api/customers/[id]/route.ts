@@ -6,10 +6,10 @@ import { PrismaError, isPrismaError } from '@/lib/prisma-errors';
 // GET /api/customers/[id] - get a single customer
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const customerId = parseInt(params.id);
+    const customerId = parseInt((await params).id);
 
     if (isNaN(customerId)) {
       return NextResponse.json(
@@ -52,10 +52,10 @@ export async function GET(
 // PATCH /api/customers/[id] - update a customer
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const customerId = parseInt(params.id);
+    const customerId = parseInt((await params).id);
 
     if (isNaN(customerId)) {
       return NextResponse.json(
@@ -111,10 +111,10 @@ export async function PATCH(
 // DELETE /api/customers/[id] - Delete a customer
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const customerId = parseInt(params.id);
+    const customerId = parseInt((await params).id);
 
     if (isNaN(customerId)) {
       return NextResponse.json(

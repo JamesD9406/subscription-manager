@@ -6,10 +6,10 @@ import { PrismaError, isPrismaError } from '@/lib/prisma-errors';
 // GET /api/subscriptions/[id] - get a single subscription
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const subscriptionId = parseInt(params.id);
+    const subscriptionId = parseInt((await params).id);
 
     if (isNaN(subscriptionId)) {
       return NextResponse.json(
@@ -49,10 +49,10 @@ export async function GET(
 // PATCH /api/subscriptions/[id] - update a subscription
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const subscriptionId = parseInt(params.id);
+    const subscriptionId = parseInt((await params).id);
 
     if (isNaN(subscriptionId)) {
       return NextResponse.json(
@@ -117,10 +117,10 @@ export async function PATCH(
 // DELETE /api/subscriptions/[id] - cancel/delete a subscription
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const subscriptionId = parseInt(params.id);
+    const subscriptionId = parseInt((await params).id);
 
     if (isNaN(subscriptionId)) {
       return NextResponse.json(
@@ -129,9 +129,10 @@ export async function DELETE(
       );
     }
 
-    // Parse optional query parameters or body for cancellation options
-    const url = new URL(request.url);
-    const cancelAtPeriodEnd = url.searchParams.get('cancelAtPeriodEnd') === 'true';
+    // Parse and validate request body
+    const body = await request.json().catch(() => ({}));
+    const validatedData = cancelSubscriptionSchema.parse(body);
+    const cancelAtPeriodEnd = validatedData.cancelAtPeriodEnd;
 
     if (cancelAtPeriodEnd) {
       // Schedule cancellation at period end

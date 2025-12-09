@@ -6,10 +6,10 @@ import { PrismaError, isPrismaError } from '@/lib/prisma-errors';
 // GET /api/invoices/[id] - get a single invoice
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const invoiceId = parseInt(params.id);
+    const invoiceId = parseInt((await params).id);
 
     if (isNaN(invoiceId)) {
       return NextResponse.json(
@@ -50,10 +50,10 @@ export async function GET(
 // PATCH /api/invoices/[id] - update an invoice
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const invoiceId = parseInt(params.id);
+    const invoiceId = parseInt((await params).id);
 
     if (isNaN(invoiceId)) {
       return NextResponse.json(
@@ -122,10 +122,10 @@ export async function PATCH(
 // DELETE /api/invoices/[id] - delete an invoice
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const invoiceId = parseInt(params.id);
+    const invoiceId = parseInt((await params).id);
 
     if (isNaN(invoiceId)) {
       return NextResponse.json(
