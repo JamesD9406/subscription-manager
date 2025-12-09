@@ -6,10 +6,11 @@ import { PrismaError, isPrismaError } from '@/lib/prisma-errors';
 // GET /api/plans/[id] - get a single plan
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const planId = parseInt(params.id);
+    const { id } = await params;
+    const planId = parseInt(id);
 
     if (isNaN(planId)) {
       return NextResponse.json(
@@ -50,10 +51,11 @@ export async function GET(
 // PATCH /api/plans/[id] - update a plan
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const planId = parseInt(params.id);
+    const { id } = await params;
+    const planId = parseInt(id);
 
     if (isNaN(planId)) {
       return NextResponse.json(
@@ -109,10 +111,11 @@ export async function PATCH(
 // DELETE /api/plans/[id] - delete a plan
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const planId = parseInt(params.id);
+    const { id } = await params;
+    const planId = parseInt(id);
 
     if (isNaN(planId)) {
       return NextResponse.json(
