@@ -3,26 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/utils';
-
-type Plan = {
-  id: number;
-  name: string;
-  description: string | null;
-  price: number;
-  billingInterval: 'MONTHLY' | 'YEARLY';
-  trialPeriodDays: number | null;
-  isActive: boolean;
-  _count?: {
-    subscriptions: number;
-  };
-};
+import { Plan } from '@/lib/types';
 
 export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // TODO: Add SWR or React Query for client-side caching and automatic revalidation
+  // TODO: Add React Query for client-side caching and automatic revalidation
   // This would optimize performance for data that doesn't change frequently
   useEffect(() => {
     fetchPlans();
