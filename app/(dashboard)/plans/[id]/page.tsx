@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, formatDate } from '@/lib/utils';
 import ConfirmDialog from '@/components/confirm-dialog';
 import { Plan } from '@/lib/types';
 
@@ -39,7 +39,7 @@ export default function ViewPlanPage() {
   const handleDelete = async () => {
     try {
       setDeleting(true);
-      setShowDeleteConfirm(false); // Close dialog
+      setShowDeleteConfirm(false);
       const response = await fetch(`/api/plans/${params.id}`, {
         method: 'DELETE',
       });
@@ -142,14 +142,14 @@ export default function ViewPlanPage() {
               <div>
                 <dt className="text-sm font-medium text-gray-500">Created At</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {new Date(plan.createdAt).toLocaleString()}
+                  {formatDate(plan.createdAt)}
                 </dd>
               </div>
 
               <div>
                 <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {new Date(plan.updatedAt).toLocaleString()}
+                  {formatDate(plan.updatedAt)}
                 </dd>
               </div>
             </dl>
@@ -173,10 +173,10 @@ export default function ViewPlanPage() {
         </div>
 
         {error && (
-            <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
+          <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
 
         <ConfirmDialog
           isOpen={showDeleteConfirm}

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createPlanSchema } from '@/lib/validators/plan';
-import { BillingInterval } from '@/lib/types'
+import { BillingInterval } from '@/lib/types';
+import { formatPrice } from '@/lib/utils';
 import { z } from 'zod';
 
 export default function NewPlanPage() {
@@ -170,8 +171,7 @@ export default function NewPlanPage() {
                 <p className="mt-1 text-sm text-red-600">{fieldErrors.price}</p>
               ) : (
                 <p className="mt-1 text-sm text-gray-500">
-                  {formData.price &&
-                    `$${(parseInt(formData.price) / 100).toFixed(2)}`}
+                  {formData.price && formatPrice(parseInt(formData.price))}
                 </p>
               )}
             </div>
