@@ -187,7 +187,7 @@ export default function InvoiceDetailPage() {
 
           <div className="px-6 py-4 border-t border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Line Items</h2>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="border border-gray-200 rounded-lg overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
