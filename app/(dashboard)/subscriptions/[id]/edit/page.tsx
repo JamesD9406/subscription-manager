@@ -142,12 +142,17 @@ export default function EditSubscriptionPage() {
                 id="status"
                 required
                 value={formData.status}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const newStatus = e.target.value as SubscriptionStatus;
                   setFormData({
                     ...formData,
-                    status: e.target.value as SubscriptionStatus,
-                  })
-                }
+                    status: newStatus,
+                    // Auto-populate canceledAt when changing to CANCELLED
+                    canceledAt: newStatus === 'CANCELLED' && !formData.canceledAt
+                      ? new Date().toISOString().split('T')[0]
+                      : formData.canceledAt,
+                  });
+                }}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
                   fieldErrors.status
                     ? 'border-red-500 focus:ring-red-500'
