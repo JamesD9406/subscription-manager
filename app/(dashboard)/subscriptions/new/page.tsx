@@ -33,7 +33,8 @@ export default function NewSubscriptionPage() {
       const response = await fetch('/api/customers');
       if (!response.ok) throw new Error('Failed to fetch customers');
       const data = await response.json();
-      setCustomers(data);
+      // Filter out cancelled customers
+      setCustomers(data.filter((customer: Customer) => customer.status !== 'CANCELLED'));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load customers');
     }
@@ -48,6 +49,36 @@ export default function NewSubscriptionPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load plans');
     }
+  };
+
+  // Calculate default period end based on plan's billing interval
+  const calculatePeriodEnd = (planId: string): string => {
+    if (!planId) return '';
+    
+    const selectedPlan = plans.find(p => p.id === Number(planId));
+    if (!selectedPlan) return '';
+
+    const today = new Date();
+    const periodEnd = new Date(today);
+
+    if (selectedPlan.billingInterval === 'MONTHLY') {
+      // Add 1 month
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+    } else if (selectedPlan.billingInterval === 'YEARLY') {
+      // Add 1 year
+      periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+    }
+
+    // Format as YYYY-MM-DD for date input
+    return periodEnd.toISOString().split('T')[0];
+  };
+
+  const handlePlanChange = (planId: string) => {
+    setFormData({
+      ...formData,
+      planId,
+      currentPeriodEnd: calculatePeriodEnd(planId),
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,6 +185,9 @@ export default function NewSubscriptionPage() {
               {fieldErrors.customerId && (
                 <p className="mt-1 text-sm text-red-600">{fieldErrors.customerId}</p>
               )}
+              <p className="mt-1 text-xs text-gray-500">
+                Only active and trialing customers are shown
+              </p>
             </div>
 
             <div>
@@ -167,9 +201,7 @@ export default function NewSubscriptionPage() {
                 id="planId"
                 required
                 value={formData.planId}
-                onChange={(e) =>
-                  setFormData({ ...formData, planId: e.target.value })
-                }
+                onChange={(e) => handlePlanChange(e.target.value)}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
                   fieldErrors.planId
                     ? 'border-red-500 focus:ring-red-500'
@@ -246,7 +278,7 @@ export default function NewSubscriptionPage() {
                 <p className="mt-1 text-sm text-red-600">{fieldErrors.currentPeriodEnd}</p>
               )}
               <p className="mt-1 text-xs text-gray-500">
-                Must be a future date
+                Auto-calculated based on plan billing interval. Must be a future date
               </p>
             </div>
 
