@@ -124,7 +124,7 @@ export default function EditCustomerPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="space-y-6">
             <div>
               <label
                 htmlFor="name"

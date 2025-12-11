@@ -169,8 +169,7 @@ export default function EditInvoicePage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Status */}
+          <form onSubmit={handleSubmit} noValidate className="space-y-6">
             <div>
               <label
                 htmlFor="status"
@@ -204,7 +203,6 @@ export default function EditInvoicePage() {
               )}
             </div>
 
-            {/* Due Date */}
             <div>
               <label
                 htmlFor="dueDate"
@@ -230,7 +228,6 @@ export default function EditInvoicePage() {
               )}
             </div>
 
-            {/* Paid At - only show if status is PAID */}
             {formData.status === 'PAID' && (
               <div>
                 <label
@@ -263,7 +260,6 @@ export default function EditInvoicePage() {
               </div>
             )}
 
-            {/* Line Items */}
             <div>
               <div className="flex justify-between items-center mb-3">
                 <label className="block text-sm font-medium text-gray-700">
@@ -363,7 +359,6 @@ export default function EditInvoicePage() {
               )}
             </div>
 
-            {/* Total Amount */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold text-gray-900">Total Amount</span>
@@ -373,7 +368,6 @@ export default function EditInvoicePage() {
               </div>
             </div>
 
-            {/* Submit Buttons */}
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
