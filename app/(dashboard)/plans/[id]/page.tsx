@@ -3,22 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { formatPrice } from '@/lib/utils';
-
-type Plan = {
-  id: number;
-  name: string;
-  description: string | null;
-  price: number;
-  billingInterval: 'MONTHLY' | 'YEARLY';
-  trialPeriodDays: number | null;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  _count?: {
-    subscriptions: number;
-  };
-};
+import { formatPrice, formatDate } from '@/lib/utils';
+import ConfirmDialog from '@/components/confirm-dialog';
+import { Plan } from '@/lib/types';
 
 export default function ViewPlanPage() {
   const params = useParams();
@@ -27,6 +14,7 @@ export default function ViewPlanPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const fetchPlan = useCallback(async () => {
     try {
@@ -49,12 +37,9 @@ export default function ViewPlanPage() {
   }, [params.id, fetchPlan]);
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
-      return;
-    }
-
     try {
       setDeleting(true);
+      setShowDeleteConfirm(false);
       const response = await fetch(`/api/plans/${params.id}`, {
         method: 'DELETE',
       });
@@ -101,7 +86,6 @@ export default function ViewPlanPage() {
         </Link>
 
         <div className="bg-white rounded-lg shadow">
-          {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex justify-between items-start">
               <div>
@@ -122,7 +106,6 @@ export default function ViewPlanPage() {
             </div>
           </div>
 
-          {/* Details */}
           <div className="px-6 py-6">
             <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
@@ -159,20 +142,19 @@ export default function ViewPlanPage() {
               <div>
                 <dt className="text-sm font-medium text-gray-500">Created At</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {new Date(plan.createdAt).toLocaleString()}
+                  {formatDate(plan.createdAt)}
                 </dd>
               </div>
 
               <div>
                 <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
                 <dd className="mt-1 text-sm text-gray-900">
-                  {new Date(plan.updatedAt).toLocaleString()}
+                  {formatDate(plan.updatedAt)}
                 </dd>
               </div>
             </dl>
           </div>
 
-          {/* Actions */}
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3">
             <Link
               href={`/plans/${plan.id}/edit`}
@@ -181,7 +163,7 @@ export default function ViewPlanPage() {
               Edit Plan
             </Link>
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={deleting}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
@@ -195,6 +177,17 @@ export default function ViewPlanPage() {
             {error}
           </div>
         )}
+
+        <ConfirmDialog
+          isOpen={showDeleteConfirm}
+          title="Delete Plan"
+          message="Are you sure you want to delete this plan? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="danger"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       </div>
     </div>
   );

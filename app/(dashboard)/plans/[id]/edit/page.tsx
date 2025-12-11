@@ -3,6 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { updatePlanSchema } from '@/lib/validators/plan';
+import { BillingInterval } from '@/lib/types';
+import { formatPrice } from '@/lib/utils';
+import { z } from 'zod';
 
 export default function EditPlanPage() {
   const params = useParams();
@@ -11,13 +15,14 @@ export default function EditPlanPage() {
     name: '',
     description: '',
     price: '',
-    billingInterval: 'MONTHLY' as 'MONTHLY' | 'YEARLY',
+    billingInterval: 'MONTHLY' as BillingInterval,
     trialPeriodDays: '',
     isActive: true,
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const fetchPlan = useCallback(async () => {
     try {
@@ -51,23 +56,28 @@ export default function EditPlanPage() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setFieldErrors({});
 
     try {
-      const payload = {
-        name: formData.name,
-        description: formData.description || null,
-        price: parseInt(formData.price),
-        billingInterval: formData.billingInterval,
-        trialPeriodDays: formData.trialPeriodDays
+      const payload: Record<string, unknown> = {};
+
+      if (formData.name) payload.name = formData.name;
+      if (formData.description !== '') payload.description = formData.description || undefined;
+      if (formData.price) payload.price = parseInt(formData.price);
+      if (formData.billingInterval) payload.billingInterval = formData.billingInterval;
+      if (formData.trialPeriodDays !== '') {
+        payload.trialPeriodDays = formData.trialPeriodDays
           ? parseInt(formData.trialPeriodDays)
-          : null,
-        isActive: formData.isActive,
-      };
+          : null;
+      }
+      payload.isActive = formData.isActive;
+
+      const validatedData = updatePlanSchema.parse(payload);
 
       const response = await fetch(`/api/plans/${params.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(validatedData),
       });
 
       if (!response.ok) {
@@ -77,7 +87,19 @@ export default function EditPlanPage() {
 
       router.push(`/plans/${params.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      if (err instanceof z.ZodError) {
+        // Handle Zod validation errors
+        const errors: Record<string, string> = {};
+        err.issues.forEach((issue) => {
+          if (issue.path.length > 0) {
+            errors[issue.path[0].toString()] = issue.message;
+          }
+        });
+        setFieldErrors(errors);
+        setError('Please fix the validation errors below');
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -131,9 +153,16 @@ export default function EditPlanPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  fieldErrors.name
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
                 placeholder="e.g., Starter, Pro, Enterprise"
               />
+              {fieldErrors.name && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>
+              )}
             </div>
 
             <div>
@@ -171,13 +200,20 @@ export default function EditPlanPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  fieldErrors.price
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
                 placeholder="e.g., 999 for $9.99"
               />
-              <p className="mt-1 text-sm text-gray-500">
-                {formData.price &&
-                  `$${(parseInt(formData.price) / 100).toFixed(2)}`}
-              </p>
+              {fieldErrors.price ? (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.price}</p>
+              ) : (
+                <p className="mt-1 text-sm text-gray-500">
+                  {formData.price && formatPrice(parseInt(formData.price))}
+                </p>
+              )}
             </div>
 
             <div>
@@ -194,7 +230,7 @@ export default function EditPlanPage() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    billingInterval: e.target.value as 'MONTHLY' | 'YEARLY',
+                    billingInterval: e.target.value as BillingInterval,
                   })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
@@ -219,9 +255,16 @@ export default function EditPlanPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, trialPeriodDays: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  fieldErrors.trialPeriodDays
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
                 placeholder="e.g., 14, 30"
               />
+              {fieldErrors.trialPeriodDays && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.trialPeriodDays}</p>
+              )}
             </div>
 
             <div className="flex items-center">
