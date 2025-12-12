@@ -26,6 +26,9 @@ export async function GET(
         invoices: {
           orderBy: { createdAt: 'desc' },
         },
+        _count: {
+          select: { invoices: true },
+        },
       },
     });
 
