@@ -11,6 +11,9 @@
     "db:reset": "npx prisma migrate reset",
     "post-deploy": "npx prisma migrate deploy"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.19.0",
     "next": "16.0.7",
